@@ -81,37 +81,43 @@ body { font-family: -apple-system, 'Helvetica Neue', sans-serif; background: var
 <script>
 const PLAYERS = ["Mateo","Valen","Johan","Simón","Tiziano","Maxi","Gero","Facu P",
   "Toto","Neme","Lio","Salva","Pedro","Juanchi","Facu O","Goran",
-  "Fran","Augusto","Bauti","Dante","Demian"];
+  "Fran","Augusto","Dante","Dylan","Lucho"];
+
+// Fecha de alta en el plantel. Los entrenamientos anteriores a esa fecha no cuentan
+// para el jugador: queda fuera del cálculo en vez de figurar ausente.
+const ALTA = { "Lucho": "2026-04-01", "Dylan": "2026-05-05" };
+function activo(name, fecha) { const d = ALTA[name]; return !d || fecha >= d; }
+
 const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const SCRIPT = 'https://script.google.com/macros/s/AKfycbxxfkvCSpxpb2zmZoc7VRlQGIUrJ3cah608PgkthmRx2FF3COn359_K2o6tV44qGIuUtg/exec';
 
 // Mismo histórico embebido que index.html. Si lo cambiás allá, cambialo acá.
 const SEED = [
-"2026-04-28|xxxxxaxxaxxxaxxxxxxxx",
-"2026-04-23|xxaxxxxxxaxxxaaxxxxxa",
-"2026-04-21|xaxxxxxxxaxxxxxxxxxxa",
-"2026-04-14|xxxxxxxxxxxaxxxaxxaxa",
-"2026-04-12|xxxxxxxxxxxxxxxxxaxxa",
-"2026-04-09|xxaxxxxxxxxxaxxxxxxxa",
-"2026-03-31|xxaxxxxxxxxxaxxxaxxxa",
-"2026-03-29|xxxxxxxxxxaxxxxxxxaxa",
-"2026-03-26|xxxxxxxxxxxaxxxxxxaxx",
-"2026-03-24|xaxxaxxxxxxxxaaxxxxxx",
-"2026-03-19|xaxaxxxxxxxaxxaxaxxxx",
-"2026-03-17|xaaaxxxxaaaaaxxxaaxxa",
-"2026-03-15|xxxxxxxxxxxxxxxxxxxxa",
-"2026-03-12|xxxxxxxxxxaxxxxxaxxxa",
-"2026-03-10|xxxxxxxxaxxxxxxxxxxxa",
-"2026-03-08|xxxxxxxxxxxxxxxxaxxxa",
-"2026-03-05|xxxxxxxxxxxaxxxxxxxxx",
-"2026-03-03|xxxxxxxxxxxaxxxxxaxaa",
-"2026-02-28|xxxxaxxxxaaxaaaxaaxaa",
-"2026-02-26|xxxxxxaxxxxxaxxxxxaaa",
-"2026-02-24|xxxxxxxxxxxxaxxaxxaaa",
-"2026-02-19|xxxxxxxxxxxxxxaaxxaaa",
-"2026-02-17|xxxxxxxxxxxxxaaaxaaaa",
-"2026-02-12|xxxxxxxxxxxxxaxaaaaaa",
-"2026-02-10|xxxxxaxaxxxaxaaaaaaaa"
+"2026-04-28|xxxxxaxxaxxxaxxxxxxax",
+"2026-04-23|xxaxxxxxxaxxxaaxxxxax",
+"2026-04-21|xaxxxxxxxaxxxxxxxxxax",
+"2026-04-14|xxxxxxxxxxxaxxxaxxxax",
+"2026-04-12|xxxxxxxxxxxxxxxxxaxax",
+"2026-04-09|xxaxxxxxxxxxaxxxxxxax",
+"2026-03-31|xxaxxxxxxxxxaxxxaxx",
+"2026-03-29|xxxxxxxxxxaxxxxxxxx",
+"2026-03-26|xxxxxxxxxxxaxxxxxxx",
+"2026-03-24|xaxxaxxxxxxxxaaxxxx",
+"2026-03-19|xaxaxxxxxxxaxxaxaxx",
+"2026-03-17|xaaaxxxxaaaaaxxxaax",
+"2026-03-15|xxxxxxxxxxxxxxxxxxx",
+"2026-03-12|xxxxxxxxxxaxxxxxaxx",
+"2026-03-10|xxxxxxxxaxxxxxxxxxx",
+"2026-03-08|xxxxxxxxxxxxxxxxaxx",
+"2026-03-05|xxxxxxxxxxxaxxxxxxx",
+"2026-03-03|xxxxxxxxxxxaxxxxxaa",
+"2026-02-28|xxxxaxxxxaaxaaaxaaa",
+"2026-02-26|xxxxxxaxxxxxaxxxxxa",
+"2026-02-24|xxxxxxxxxxxxaxxaxxa",
+"2026-02-19|xxxxxxxxxxxxxxaaxxa",
+"2026-02-17|xxxxxxxxxxxxxaaaxaa",
+"2026-02-12|xxxxxxxxxxxxxaxaaaa",
+"2026-02-10|xxxxxaxaxxxaxaaaaaa"
 ].map(s => {
   const [fecha, marks] = s.split('|');
   const players = {};
@@ -172,12 +178,14 @@ function render() {
 
   const tot = filtered.length;
   const rows = PLAYERS.map(name => {
-    const pre = filtered.filter(s => s.players[name] === 'present').length;
-    return { name, pct: Math.round(pre / tot * 100) };
-  }).sort((a,b) => b.pct - a.pct || a.name.localeCompare(b.name));
+    const suyos = filtered.filter(s => activo(name, s.fecha));
+    if (!suyos.length) return null;   // no estaba en el plantel en este período
+    const pre = suyos.filter(s => s.players[name] === 'present').length;
+    return { name, pct: Math.round(pre / suyos.length * 100) };
+  }).filter(Boolean).sort((a,b) => b.pct - a.pct || a.name.localeCompare(b.name));
 
   const promedio = Math.round(rows.reduce((s,r)=>s+r.pct,0) / rows.length);
-  const porSesion = filtered.reduce((s,f) => s + PLAYERS.filter(p=>f.players[p]==='present').length, 0) / tot;
+  const porSesion = filtered.reduce((s,f) => s + PLAYERS.filter(p=>activo(p,f.fecha) && f.players[p]==='present').length, 0) / tot;
   const perfectos = rows.filter(r => r.pct === 100).length;
 
   metrics.innerHTML = [
