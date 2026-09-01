@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentismo M15 — Banco Nación</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --teal: #0F6E56; --teal-bg: #E1F5EE; --teal-mid: #1D9E75;
+  --blue: #185FA5; --blue-bg: #E6F1FB; --blue-mid: #378ADD;
+  --red: #993C1D; --red-bg: #FAECE7; --red-mid: #D85A30;
+  --bg: #ffffff; --bg2: #f5f4f0; --text: #1a1a18; --text2: #6b6b67;
+  --border: rgba(0,0,0,0.12); --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1c1c1a; --bg2: #252523; --text: #f0efe8; --text2: #888780; --border: rgba(255,255,255,0.1);
+    --teal-bg: #085041; --blue-bg: #0C447C; --red-bg: #712B13;
+    --teal: #9FE1CB; --blue: #B5D4F4; --red: #F5C4B3; }
+}
+body { font-family: -apple-system, 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text);
+  padding: 16px; max-width: 620px; margin: 0 auto; }
+
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.head h1 { font-size: 19px; font-weight: 600; }
+.head p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.live { font-size: 11px; padding: 4px 10px; border-radius: 20px; white-space: nowrap;
+  background: var(--teal-bg); color: var(--teal); border: 0.5px solid var(--teal-mid); }
+.live.err { background: var(--red-bg); color: var(--red); border-color: var(--red-mid); }
+
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.tab { flex: 1; padding: 9px 0; text-align: center; border-radius: var(--radius);
+  border: 0.5px solid var(--border); background: var(--bg2); color: var(--text2);
+  font-size: 13px; cursor: pointer; font-family: inherit; }
+.tab.active { background: var(--teal-mid); color: #fff; border-color: var(--teal-mid); font-weight: 600; }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.metric { background: var(--bg2); border-radius: var(--radius); padding: 14px; }
+.metric .lbl { font-size: 12px; color: var(--text2); }
+.metric .val { font-size: 24px; font-weight: 600; margin-top: 4px; }
+
+.card { background: var(--bg); border: 0.5px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.grp { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.grp:not(:first-child) { margin-top: 18px; padding-top: 18px; border-top: 0.5px solid var(--border); }
+.badge { font-size: 12px; padding: 4px 11px; border-radius: var(--radius); font-weight: 600; }
+.badge.w { background: var(--teal-bg); color: var(--teal); }
+.badge.s { background: var(--blue-bg); color: var(--blue); }
+.badge.f { background: var(--red-bg); color: var(--red); }
+.grp .rango { font-size: 12px; color: var(--text2); }
+
+.row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.rk { font-size: 12px; color: var(--text2); width: 22px; flex-shrink: 0; }
+.nm { flex: 1; font-size: 14px; }
+.bar { width: 110px; height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.bar div { height: 100%; }
+.pc { font-size: 13px; font-weight: 600; width: 40px; text-align: right; flex-shrink: 0; }
+.empty { color: var(--text2); font-size: 13px; padding: 4px 0; }
+.foot { font-size: 12px; color: var(--text2); text-align: center; margin-top: 16px; }
+@media (max-width: 400px) { .bar { width: 70px; } }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div>
+    <h1>Presentismo M15</h1>
+    <p>Banco Nación · plantel 2026</p>
+  </div>
+  <div class="live" id="live">Cargando</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="t-mes" onclick="setPeriodo('mes')">Mes actual</button>
+  <button class="tab" id="t-ytd" onclick="setPeriodo('ytd')">Año</button>
+</div>
+
+<div class="metrics" id="metrics"></div>
+<div class="card" id="ranking"></div>
+<div class="foot">Solo lectura. Los datos se cargan desde la app de asistencia.</div>
+
+<script>
+const PLAYERS = ["Mateo","Valen","Johan","Simón","Tiziano","Maxi","Gero","Facu P",
+  "Toto","Neme","Lio","Salva","Pedro","Juanchi","Facu O","Goran",
+  "Fran","Augusto","Bauti","Dante","Demian"];
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const SCRIPT = 'https://script.google.com/macros/s/AKfycbxxfkvCSpxpb2zmZoc7VRlQGIUrJ3cah608PgkthmRx2FF3COn359_K2o6tV44qGIuUtg/exec';
+
+// Mismo histórico embebido que index.html. Si lo cambiás allá, cambialo acá.
+const SEED = [
+"2026-04-28|xxxxxaxxaxxxaxxxxxxxx",
+"2026-04-23|xxaxxxxxxaxxxaaxxxxxa",
+"2026-04-21|xaxxxxxxxaxxxxxxxxxxa",
+"2026-04-14|xxxxxxxxxxxaxxxaxxaxa",
+"2026-04-12|xxxxxxxxxxxxxxxxxaxxa",
+"2026-04-09|xxaxxxxxxxxxaxxxxxxxa",
+"2026-03-31|xxaxxxxxxxxxaxxxaxxxa",
+"2026-03-29|xxxxxxxxxxaxxxxxxxaxa",
+"2026-03-26|xxxxxxxxxxxaxxxxxxaxx",
+"2026-03-24|xaxxaxxxxxxxxaaxxxxxx",
+"2026-03-19|xaxaxxxxxxxaxxaxaxxxx",
+"2026-03-17|xaaaxxxxaaaaaxxxaaxxa",
+"2026-03-15|xxxxxxxxxxxxxxxxxxxxa",
+"2026-03-12|xxxxxxxxxxaxxxxxaxxxa",
+"2026-03-10|xxxxxxxxaxxxxxxxxxxxa",
+"2026-03-08|xxxxxxxxxxxxxxxxaxxxa",
+"2026-03-05|xxxxxxxxxxxaxxxxxxxxx",
+"2026-03-03|xxxxxxxxxxxaxxxxxaxaa",
+"2026-02-28|xxxxaxxxxaaxaaaxaaxaa",
+"2026-02-26|xxxxxxaxxxxxaxxxxxaaa",
+"2026-02-24|xxxxxxxxxxxxaxxaxxaaa",
+"2026-02-19|xxxxxxxxxxxxxxaaxxaaa",
+"2026-02-17|xxxxxxxxxxxxxaaaxaaaa",
+"2026-02-12|xxxxxxxxxxxxxaxaaaaaa",
+"2026-02-10|xxxxxaxaxxxaxaaaaaaaa"
+].map(s => {
+  const [fecha, marks] = s.split('|');
+  const players = {};
+  PLAYERS.forEach((p,i) => players[p] = marks[i] === 'x' ? 'present' : 'absent');
+  return { fecha, players };
+});
+
+let sessions = SEED.slice();
+let periodo = 'mes';
+
+function setPeriodo(p) {
+  periodo = p;
+  document.getElementById('t-mes').classList.toggle('active', p==='mes');
+  document.getElementById('t-ytd').classList.toggle('active', p==='ytd');
+  render();
+}
+
+async function cargar() {
+  try {
+    const res = await fetch(SCRIPT + '?action=read');
+    const data = await res.json();
+    if (!data.ok || !data.sessions) throw new Error('sin datos');
+    const map = new Map();
+    SEED.forEach(s => map.set(s.fecha, s));
+    data.sessions.forEach(s => map.set(s.fecha, s));
+    sessions = [...map.values()].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+    marcarLive(true);
+  } catch(e) {
+    marcarLive(false);
+  }
+  render();
+}
+
+function marcarLive(ok) {
+  const el = document.getElementById('live');
+  el.className = 'live' + (ok ? '' : ' err');
+  el.textContent = ok
+    ? 'Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
+    : 'Sin conexión';
+}
+
+function render() {
+  const now = new Date();
+  const prefix = periodo === 'mes'
+    ? `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+    : `${now.getFullYear()}`;
+  const filtered = sessions.filter(s => s.fecha.startsWith(prefix));
+  const lbl = periodo === 'mes' ? MESES[now.getMonth()] : `año ${now.getFullYear()}`;
+
+  const metrics = document.getElementById('metrics');
+  const rank = document.getElementById('ranking');
+
+  if (!filtered.length) {
+    metrics.innerHTML = '';
+    rank.innerHTML = `<div class="empty">Todavía no hay entrenamientos cargados en ${lbl}.</div>`;
+    return;
+  }
+
+  const tot = filtered.length;
+  const rows = PLAYERS.map(name => {
+    const pre = filtered.filter(s => s.players[name] === 'present').length;
+    return { name, pct: Math.round(pre / tot * 100) };
+  }).sort((a,b) => b.pct - a.pct || a.name.localeCompare(b.name));
+
+  const promedio = Math.round(rows.reduce((s,r)=>s+r.pct,0) / rows.length);
+  const porSesion = filtered.reduce((s,f) => s + PLAYERS.filter(p=>f.players[p]==='present').length, 0) / tot;
+  const perfectos = rows.filter(r => r.pct === 100).length;
+
+  metrics.innerHTML = [
+    ['Promedio del plantel', promedio + '%'],
+    ['Entrenamientos', tot],
+    ['Promedio por sesión', porSesion.toFixed(1).replace('.',',')],
+    ['Con 100%', perfectos]
+  ].map(([l,v]) => `<div class="metric"><div class="lbl">${l}</div><div class="val">${v}</div></div>`).join('');
+
+  const grupos = [
+    ['w', '💪 Warriors', '85% o más', 'var(--teal-mid)', 'var(--teal)', rows.filter(r=>r.pct>=85)],
+    ['s', '🫡 Soldados', 'entre 60% y 84%', 'var(--blue-mid)', 'var(--blue)', rows.filter(r=>r.pct>=60&&r.pct<85)],
+    ['f', '👻 Fantasmas', 'menos de 60%', 'var(--red-mid)', 'var(--red)', rows.filter(r=>r.pct<60)]
+  ];
+
+  rank.innerHTML = grupos.map(([cls, titulo, rango, barra, color, list]) => `
+    <div class="grp"><span class="badge ${cls}">${titulo}</span><span class="rango">${rango}</span></div>
+    ${list.length
+      ? list.map(r => `<div class="row">
+          <span class="rk">${rows.indexOf(r)+1}</span>
+          <span class="nm">${r.name}</span>
+          <div class="bar"><div style="width:${r.pct}%;background:${barra}"></div></div>
+          <span class="pc" style="color:${color}">${r.pct}%</span>
+        </div>`).join('')
+      : '<div class="empty">Nadie en esta categoría.</div>'}
+  `).join('');
+}
+
+render();
+cargar();
+setInterval(cargar, 60000);
+</script>
+</body>
+</html>
