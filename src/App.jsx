@@ -11,7 +11,12 @@ import Ajustes from './screens/Ajustes.jsx'
 function loadSessions() {
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].jugadores) {
+        return parsed
+      }
+    }
   } catch {}
   return SEED_SESSIONS
 }
