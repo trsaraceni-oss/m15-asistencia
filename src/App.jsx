@@ -8,15 +8,24 @@ import Stats from './screens/Stats.jsx'
 import Ranking from './screens/Ranking.jsx'
 import Ajustes from './screens/Ajustes.jsx'
 
+function normalizeSession(s) {
+  if (!s || !s.fecha) return null
+  // old HTML app stored attendance as s.players; new app uses s.jugadores
+  if (!s.jugadores && s.players && typeof s.players === 'object') {
+    return { ...s, jugadores: s.players }
+  }
+  if (s.jugadores && typeof s.jugadores === 'object') return s
+  return null
+}
+
 function loadSessions() {
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const valid = parsed.filter(s => s && s.fecha && s.jugadores && typeof s.jugadores === 'object')
+        const valid = parsed.map(normalizeSession).filter(Boolean)
         if (valid.length > 0) {
-          const seedMap = Object.fromEntries(SEED_SESSIONS.map(s => [s.fecha, s]))
           const merged = Object.values(
             [...SEED_SESSIONS, ...valid].reduce((acc, s) => { acc[s.fecha] = s; return acc }, {})
           ).sort((a, b) => a.fecha < b.fecha ? 1 : -1)
