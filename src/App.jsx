@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { LOCAL_KEY, PROFILES_KEY, MATCHES_KEY, SEED_SESSIONS, apiCall } from './constants.js'
+import Home from './screens/Home.jsx'
 import Equipo from './screens/Equipo.jsx'
 import Partidos from './screens/Partidos.jsx'
 import Tomar from './screens/Tomar.jsx'
@@ -56,7 +57,7 @@ function loadMatches() {
 const ASISTENCIA_TABS = ['Tomar', 'Historial', 'Stats', 'Ranking']
 
 export default function App() {
-  const [tab, setTab] = useState('asistencia')
+  const [tab, setTab] = useState('home')
   const [asTab, setAsTab] = useState('Tomar')
   const [sessions, setSessions] = useState(loadSessions)
   const [profiles, setProfiles] = useState(loadProfiles)
@@ -101,12 +102,19 @@ export default function App() {
   const totalSessions = sessions.length
   const totalMatches = matches.length
 
+  if (tab === 'home') {
+    return <Home onNavigate={setTab} />
+  }
+
   return (
     <div className="app">
       <div className="top-bar">
-        <div>
-          <h1>M15 Banco Nación</h1>
-          <p>{totalSessions} sesiones · {totalMatches} partidos</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button className="back-btn" onClick={() => setTab('home')} aria-label="Inicio">←</button>
+          <div>
+            <h1>M15 Banco Nación</h1>
+            <p>{totalSessions} sesiones · {totalMatches} partidos</p>
+          </div>
         </div>
         <span className={`sync-badge ${syncStatus}`}>
           {syncStatus === 'on' ? '● Online' : syncStatus === 'loading' ? '◌ Sync…' : '○ Offline'}
@@ -152,7 +160,7 @@ export default function App() {
           <span className="icon">👥</span>Equipo
         </button>
         <button className={`nav-btn ${tab === 'partidos' ? 'active' : ''}`} onClick={() => setTab('partidos')}>
-          <span className="icon">⚽</span>Partidos
+          <span className="icon">🏉</span>Partidos
         </button>
         <button className={`nav-btn ${tab === 'asistencia' ? 'active' : ''}`} onClick={() => setTab('asistencia')}>
           <span className="icon">📋</span>Asistencia

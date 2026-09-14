@@ -1,6 +1,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 :root {
+  --club: #2d6e7c; --club-dark: #1e4f5a; --club-light: #e8f4f7;
   --teal: #0F6E56; --teal-bg: #E1F5EE; --teal-mid: #5DCAA5; --teal-dark: #085041;
   --red: #993C1D; --red-bg: #FAECE7; --red-mid: #F0997B; --red-dark: #712B13;
   --bg: #ffffff; --bg2: #f5f4f0; --text: #1a1a18; --text2: #6b6b67;
@@ -226,3 +227,74 @@ body { font-family: -apple-system,'Helvetica Neue',sans-serif; background: var(-
 .empty-state { text-align: center; padding: 48px 16px; color: var(--text2); }
 .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
 .empty-state p { font-size: 15px; }
+
+/* HOME SCREEN */
+.home-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 48px 24px 32px;
+  background: var(--bg);
+  gap: 0;
+}
+
+.home-title {
+  font-size: clamp(28px, 8vw, 40px);
+  font-weight: 900;
+  text-align: center;
+  line-height: 1.2;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  margin-bottom: 40px;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 40px;
+}
+
+.home-btn {
+  background: var(--club);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 20px 12px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 3px 10px rgba(45,110,124,0.3);
+  -webkit-tap-highlight-color: transparent;
+}
+.home-btn:active { background: var(--club-dark); transform: scale(0.97); }
+
+@media (prefers-color-scheme: dark) {
+  .home-btn { box-shadow: 0 3px 10px rgba(0,0,0,0.4); }
+}
+
+.home-logo {
+  margin-top: auto;
+  opacity: 0.92;
+  filter: drop-shadow(0 4px 12px rgba(45,110,124,0.2));
+}
+
+/* BACK BUTTON */
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: var(--club);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.back-btn:active { background: var(--club-light); }
