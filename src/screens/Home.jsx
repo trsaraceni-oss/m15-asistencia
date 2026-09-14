@@ -1,66 +1,80 @@
 const BullLogo = () => (
-  <svg viewBox="0 0 200 200" width="160" height="160" xmlns="http://www.w3.org/2000/svg">
-    {/* outer circle */}
-    <circle cx="100" cy="100" r="98" fill="#d0d8dc" stroke="#b0bcc2" strokeWidth="1.5" />
-    {/* inner circle */}
-    <circle cx="100" cy="100" r="88" fill="#e8edf0" />
+  <svg viewBox="0 0 220 220" width="172" height="172" xmlns="http://www.w3.org/2000/svg">
+    {/* outer circle - gray */}
+    <circle cx="110" cy="110" r="108" fill="#a8b0b4" />
 
-    {/* jersey body - light blue stripes */}
-    <ellipse cx="100" cy="128" rx="38" ry="42" fill="#5bb8d4" />
-    <rect x="62" y="100" width="13" height="70" fill="#ffffff" opacity="0.7" rx="2" />
-    <rect x="88" y="100" width="13" height="70" fill="#ffffff" opacity="0.7" rx="2" />
-    <rect x="114" y="100" width="13" height="70" fill="#ffffff" opacity="0.7" rx="2" />
-    {/* collar */}
-    <ellipse cx="100" cy="103" rx="14" ry="7" fill="#3a9ab5" />
+    {/* inner cyan circle behind bull */}
+    <circle cx="110" cy="108" r="80" fill="#6ec6d8" />
+
+    {/* shirt body - white with blue stripes, at bottom */}
+    <ellipse cx="110" cy="175" rx="52" ry="38" fill="white" />
+    {/* blue vertical stripes on shirt */}
+    {[87, 98, 109, 120, 131].map(x => (
+      <rect key={x} x={x} y="148" width="5" height="65" fill="#4488cc" opacity="0.55" />
+    ))}
+    {/* shirt collar - V shape */}
+    <polygon points="110,152 98,165 122,165" fill="#4488cc" opacity="0.7" />
 
     {/* neck */}
-    <rect x="86" y="82" width="28" height="22" rx="8" fill="#c8a070" />
+    <rect x="96" y="132" width="28" height="22" rx="4" fill="#1a1a1a" />
 
-    {/* head */}
-    <ellipse cx="100" cy="72" rx="30" ry="26" fill="#d4a878" />
+    {/* bull head - large black shape */}
+    <ellipse cx="110" cy="108" rx="54" ry="52" fill="#1a1a1a" />
 
-    {/* snout */}
-    <ellipse cx="100" cy="83" rx="18" ry="12" fill="#e8b888" />
-    <ellipse cx="94" cy="83" rx="5" ry="4" fill="#b07050" opacity="0.6" />
-    <ellipse cx="106" cy="83" rx="5" ry="4" fill="#b07050" opacity="0.6" />
+    {/* left horn */}
+    <path d="M 68 80 Q 38 40 52 18 Q 62 44 76 68 Z" fill="#1a1a1a" />
+    <path d="M 52 18 Q 44 12 50 22 Q 56 16 62 24" fill="#1a1a1a" />
 
-    {/* eyes */}
-    <circle cx="88" cy="65" r="7" fill="white" />
-    <circle cx="112" cy="65" r="7" fill="white" />
-    <circle cx="89" cy="65" r="4" fill="#2a2a2a" />
-    <circle cx="113" cy="65" r="4" fill="#2a2a2a" />
-    <circle cx="90.5" cy="63.5" r="1.5" fill="white" />
-    <circle cx="114.5" cy="63.5" r="1.5" fill="white" />
+    {/* right horn */}
+    <path d="M 152 80 Q 182 40 168 18 Q 158 44 144 68 Z" fill="#1a1a1a" />
+    <path d="M 168 18 Q 176 12 170 22 Q 164 16 158 24" fill="#1a1a1a" />
 
-    {/* eyebrows */}
-    <path d="M82 59 Q88 55 95 58" stroke="#5a3510" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-    <path d="M105 58 Q112 55 118 59" stroke="#5a3510" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+    {/* forehead bump / poll - rounded top with dot pattern */}
+    <ellipse cx="110" cy="68" rx="28" ry="24" fill="#2a2a2a" />
+    {/* dots on forehead (curly hair / poll) */}
+    {[
+      [100,62],[108,58],[116,62],[104,70],[112,68],[120,66],
+      [96,68],[106,54],[114,54],[122,58],[118,72],[98,74]
+    ].map(([cx,cy],i) => (
+      <circle key={i} cx={cx} cy={cy} r="3" fill="#1a1a1a" stroke="#e0e0e0" strokeWidth="0.8" />
+    ))}
 
-    {/* horns */}
-    <path d="M74 58 Q60 30 72 20 Q76 40 84 52 Z" fill="#b8906a" />
-    <path d="M126 58 Q140 30 128 20 Q124 40 116 52 Z" fill="#b8906a" />
-    {/* horn tips */}
-    <path d="M70 22 Q66 18 72 20" fill="#8a6040" />
-    <path d="M130 22 Q134 18 128 20" fill="#8a6040" />
+    {/* left ear */}
+    <ellipse cx="58" cy="100" rx="12" ry="16" fill="#1a1a1a" />
 
-    {/* ears */}
-    <ellipse cx="70" cy="68" rx="8" ry="11" fill="#c8a070" />
-    <ellipse cx="70" cy="68" rx="5" ry="7" fill="#e8b888" />
-    <ellipse cx="130" cy="68" rx="8" ry="11" fill="#c8a070" />
-    <ellipse cx="130" cy="68" rx="5" ry="7" fill="#e8b888" />
+    {/* right ear */}
+    <ellipse cx="162" cy="100" rx="12" ry="16" fill="#1a1a1a" />
 
-    {/* arms */}
-    <path d="M62 115 Q45 120 42 135 Q50 130 62 128 Z" fill="#5bb8d4" />
-    <path d="M138 115 Q155 120 158 135 Q150 130 138 128 Z" fill="#5bb8d4" />
+    {/* face - lighter area around muzzle */}
+    <ellipse cx="110" cy="118" rx="38" ry="30" fill="#2e2e2e" />
 
-    {/* curved text arc - RUGBY BANCO */}
-    <path id="arc" d="M 22 100 A 78 78 0 0 0 178 100" fill="none" />
-    <text fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#1a3a4a" letterSpacing="3">
-      <textPath href="#arc" startOffset="10%">RUGBY BANCO</textPath>
-    </text>
+    {/* eyes - white with dark pupils */}
+    <ellipse cx="90" cy="104" rx="11" ry="12" fill="white" />
+    <ellipse cx="130" cy="104" rx="11" ry="12" fill="white" />
+    <circle cx="91" cy="106" r="7" fill="#111" />
+    <circle cx="131" cy="106" r="7" fill="#111" />
+    <circle cx="89" cy="103" r="2.5" fill="white" />
+    <circle cx="129" cy="103" r="2.5" fill="white" />
 
-    {/* bottom decorative line */}
-    <path d="M 35 150 Q 100 165 165 150" stroke="#2d6e7c" strokeWidth="2" fill="none" opacity="0.4" />
+    {/* muzzle / snout - cream/beige large oval */}
+    <ellipse cx="110" cy="128" rx="30" ry="20" fill="#d4b07a" />
+    {/* nostrils */}
+    <ellipse cx="101" cy="130" rx="7" ry="5" fill="#b08050" />
+    <ellipse cx="119" cy="130" rx="7" ry="5" fill="#b08050" />
+
+    {/* mouth line */}
+    <path d="M 100 138 Q 110 143 120 138" stroke="#8a6030" strokeWidth="2" fill="none" strokeLinecap="round" />
+
+    {/* "RUGBY BANCO" text - bold blue at bottom */}
+    <text
+      x="110" y="196"
+      textAnchor="middle"
+      fontFamily="'Arial Black', Arial, sans-serif"
+      fontSize="17"
+      fontWeight="900"
+      fill="#2255bb"
+      letterSpacing="1.5"
+    >RUGBY BANCO</text>
   </svg>
 )
 
