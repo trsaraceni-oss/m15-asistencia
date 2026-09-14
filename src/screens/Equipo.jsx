@@ -16,9 +16,9 @@ function initials(name) {
 }
 
 function getAttPct(name, sessions) {
-  const valid = sessions.filter(s => s.jugadores[name] !== 'none')
+  const valid = sessions.filter(s => s.jugadores?.[name] !== 'none')
   if (valid.length === 0) return null
-  const pres = valid.filter(s => s.jugadores[name] === 'present').length
+  const pres = valid.filter(s => s.jugadores?.[name] === 'present').length
   return Math.round(pres / valid.length * 100)
 }
 
@@ -62,7 +62,7 @@ export default function Equipo({ sessions, profiles, onSaveProfiles }) {
   }
 
   const matchesPlayed = (name) => {
-    return sessions.filter(s => s.jugadores[name] === 'present').length
+    return sessions.filter(s => s.jugadores?.[name] === 'present').length
   }
 
   return (

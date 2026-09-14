@@ -13,8 +13,15 @@ function loadSessions() {
     const raw = localStorage.getItem(LOCAL_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].jugadores) {
-        return parsed
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const valid = parsed.filter(s => s && s.fecha && s.jugadores && typeof s.jugadores === 'object')
+        if (valid.length > 0) {
+          const seedMap = Object.fromEntries(SEED_SESSIONS.map(s => [s.fecha, s]))
+          const merged = Object.values(
+            [...SEED_SESSIONS, ...valid].reduce((acc, s) => { acc[s.fecha] = s; return acc }, {})
+          ).sort((a, b) => a.fecha < b.fecha ? 1 : -1)
+          return merged
+        }
       }
     }
   } catch {}

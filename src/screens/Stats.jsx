@@ -12,8 +12,8 @@ export default function Stats({ sessions }) {
   })
 
   const rows = PLAYERS.map(p => {
-    const valid = filtered.filter(s => s.jugadores[p] !== 'none')
-    const pres = valid.filter(s => s.jugadores[p] === 'present').length
+    const valid = filtered.filter(s => s.jugadores?.[p] !== 'none')
+    const pres = valid.filter(s => s.jugadores?.[p] === 'present').length
     const pct = valid.length > 0 ? Math.round(pres / valid.length * 100) : 0
     return { p, pct, pres, total: valid.length }
   }).sort((a, b) => b.pct - a.pct)
