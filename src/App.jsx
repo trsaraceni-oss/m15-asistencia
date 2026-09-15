@@ -74,9 +74,13 @@ export default function App() {
           fetchMatches(),
         ])
 
-        // Merge sessions: remote wins over local for same fecha; seed fills gaps
+        const localSessions = loadLocalSessions()
+        const localProfiles = loadLocalProfiles()
+        const localMatches = loadLocalMatches()
+
+        // Sessions: merge all, remote wins for same fecha
         const merged = Object.values(
-          [...SEED_SESSIONS, ...loadLocalSessions(), ...remoteSessions]
+          [...SEED_SESSIONS, ...localSessions, ...remoteSessions]
             .map(normalizeSession).filter(Boolean)
             .reduce((acc, s) => { acc[s.fecha] = s; return acc }, {})
         ).sort((a, b) => a.fecha < b.fecha ? 1 : -1)
@@ -84,16 +88,39 @@ export default function App() {
         setSessions(merged)
         localStorage.setItem(LOCAL_KEY, JSON.stringify(merged))
 
-        // Profiles: merge local + remote (remote wins)
-        const mergedProfiles = { ...loadLocalProfiles(), ...remoteProfiles }
+        // Push local sessions missing from Supabase
+        const remoteFechas = new Set(remoteSessions.map(s => s.fecha))
+        const missingSessions = localSessions.filter(s => s.fecha && !remoteFechas.has(s.fecha))
+        if (missingSessions.length) {
+          upsertSessions(missingSessions).catch(() => {})
+        }
+
+        // Profiles: merge local + remote (remote wins); push local-only players
+        const mergedProfiles = { ...localProfiles, ...remoteProfiles }
         setProfiles(mergedProfiles)
         localStorage.setItem(PROFILES_KEY, JSON.stringify(mergedProfiles))
 
-        // Matches: remote is source of truth
-        if (remoteMatches.length > 0) {
-          setMatches(remoteMatches)
-          localStorage.setItem(MATCHES_KEY, JSON.stringify(remoteMatches))
+        const missingProfiles = Object.fromEntries(
+          Object.entries(localProfiles).filter(([p]) => !remoteProfiles[p])
+        )
+        if (Object.keys(missingProfiles).length) {
+          upsertProfiles(missingProfiles).catch(() => {})
         }
+
+        // Matches: merge local + remote; push local-only matches
+        const remoteIds = new Set(remoteMatches.map(m => m.id))
+        const missingMatches = localMatches.filter(m => m.id && !remoteIds.has(m.id))
+        if (missingMatches.length) {
+          Promise.all(missingMatches.map(m => upsertMatch(m))).catch(() => {})
+        }
+
+        const mergedMatches = Object.values(
+          [...localMatches, ...remoteMatches]
+            .reduce((acc, m) => { if (m.id) acc[m.id] = m; return acc }, {})
+        ).sort((a, b) => a.fecha < b.fecha ? 1 : -1)
+
+        setMatches(mergedMatches)
+        localStorage.setItem(MATCHES_KEY, JSON.stringify(mergedMatches))
 
         setSyncStatus('on')
       } catch {
