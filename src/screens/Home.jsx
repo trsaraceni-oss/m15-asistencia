@@ -23,8 +23,8 @@ export default function Home({ onNavigate }) {
       </div>
 
       <div className="home-logo">
-        <img src="/m15-asistencia/escudo.jpg" alt="Rugby Banco" width="172" height="172"
-          style={{ borderRadius: '50%', objectFit: 'cover' }} />
+        <img src="/m15-asistencia/escudo.jpg" alt="Rugby Banco"
+          style={{ width: '172px', height: '172px', borderRadius: '50%', objectFit: 'contain', background: '#eee' }} />
       </div>
     </div>
   )
