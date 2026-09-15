@@ -137,7 +137,7 @@ export default function App() {
       </div>
 
       <div className={`screen ${tab === 'partidos' ? 'active' : ''}`}>
-        <Partidos matches={matches} onSave={saveMatches} />
+        <Partidos matches={matches} onSave={saveMatches} profiles={profiles} />
       </div>
 
       <div className={`screen ${tab === 'asistencia' ? 'active' : ''}`}>

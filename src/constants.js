@@ -7,8 +7,26 @@ export const PLAYERS = [
 export const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 export const POSITIONS = [
-  'Pilar Derecho','Pilar Izquierdo','Talonador','Lock','Flanker Abierto',
-  'Flanker Ciego','Octavo','Medio Scrum','Apertura','Centro','Ala','Full',
+  'Pilar Izquierdo','Hooker','Pilar Derecho','Segunda Linea',
+  'Ala','Ocho','Medio Scrum','Apertura','Centro','Wing','Fullback',
+]
+
+export const FORMATION = [
+  { num: 1,  pos: 'Pilar Izquierdo' },
+  { num: 2,  pos: 'Hooker' },
+  { num: 3,  pos: 'Pilar Derecho' },
+  { num: 4,  pos: 'Segunda Linea' },
+  { num: 5,  pos: 'Segunda Linea' },
+  { num: 6,  pos: 'Ala' },
+  { num: 7,  pos: 'Ala' },
+  { num: 8,  pos: 'Ocho' },
+  { num: 9,  pos: 'Medio Scrum' },
+  { num: 10, pos: 'Apertura' },
+  { num: 11, pos: 'Wing' },
+  { num: 12, pos: 'Centro' },
+  { num: 13, pos: 'Centro' },
+  { num: 14, pos: 'Wing' },
+  { num: 15, pos: 'Fullback' },
 ];
 
 export const SKILLS = [

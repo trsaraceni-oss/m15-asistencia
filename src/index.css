@@ -223,6 +223,15 @@ body { font-family: -apple-system,'Helvetica Neue',sans-serif; background: var(-
   background: var(--bg2); color: var(--text2); font-size: 13px; cursor: pointer; text-align: center; }
 .lugar-btn.active { background: var(--teal-bg); color: var(--teal); border-color: var(--teal-mid); }
 
+/* FORMATION PICKER */
+.formation-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; }
+.pos-num { width: 26px; height: 26px; border-radius: 50%; background: var(--teal);
+  color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; }
+.pos-label { font-size: 13px; color: var(--text2); flex: 1; min-width: 0; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.formation-row select { flex-shrink: 0; width: 130px; font-size: 13px; }
+
 /* EMPTY STATE */
 .empty-state { text-align: center; padding: 48px 16px; color: var(--text2); }
 .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
