@@ -9,9 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
+    "html2canvas": "^1.4.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "html2canvas": "^1.4.1"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
