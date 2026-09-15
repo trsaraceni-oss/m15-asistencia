@@ -1,8 +1,7 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [claude/migrate-react-vite-5eAri]
+  workflow_dispatch:
 
 permissions:
   contents: read
