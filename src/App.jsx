@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
-import { LOCAL_KEY, PROFILES_KEY, MATCHES_KEY, SEED_SESSIONS, apiCall } from './constants.js'
+import { LOCAL_KEY, PROFILES_KEY, MATCHES_KEY, SEED_SESSIONS } from './constants.js'
+import {
+  fetchSessions, upsertSessions,
+  fetchProfiles, upsertProfiles,
+  fetchMatches, upsertMatch, deleteMatch as dbDeleteMatch,
+} from './supabase.js'
 import Home from './screens/Home.jsx'
 import Equipo from './screens/Equipo.jsx'
 import Partidos from './screens/Partidos.jsx'
@@ -11,7 +16,6 @@ import Ajustes from './screens/Ajustes.jsx'
 
 function normalizeSession(s) {
   if (!s || !s.fecha) return null
-  // old HTML app stored attendance as s.players; new app uses s.jugadores
   if (!s.jugadores && s.players && typeof s.players === 'object') {
     return { ...s, jugadores: s.players }
   }
@@ -19,26 +23,21 @@ function normalizeSession(s) {
   return null
 }
 
-function loadSessions() {
+function loadLocalSessions() {
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed) && parsed.length > 0) {
         const valid = parsed.map(normalizeSession).filter(Boolean)
-        if (valid.length > 0) {
-          const merged = Object.values(
-            [...SEED_SESSIONS, ...valid].reduce((acc, s) => { acc[s.fecha] = s; return acc }, {})
-          ).sort((a, b) => a.fecha < b.fecha ? 1 : -1)
-          return merged
-        }
+        if (valid.length > 0) return valid
       }
     }
   } catch {}
   return SEED_SESSIONS
 }
 
-function loadProfiles() {
+function loadLocalProfiles() {
   try {
     const raw = localStorage.getItem(PROFILES_KEY)
     if (raw) return JSON.parse(raw)
@@ -46,7 +45,7 @@ function loadProfiles() {
   return {}
 }
 
-function loadMatches() {
+function loadLocalMatches() {
   try {
     const raw = localStorage.getItem(MATCHES_KEY)
     if (raw) return JSON.parse(raw)
@@ -59,45 +58,83 @@ const ASISTENCIA_TABS = ['Tomar', 'Historial', 'Stats', 'Ranking']
 export default function App() {
   const [tab, setTab] = useState('home')
   const [asTab, setAsTab] = useState('Tomar')
-  const [sessions, setSessions] = useState(loadSessions)
-  const [profiles, setProfiles] = useState(loadProfiles)
-  const [matches, setMatches] = useState(loadMatches)
-  const [syncStatus, setSyncStatus] = useState('off')
+  const [sessions, setSessions] = useState(loadLocalSessions)
+  const [profiles, setProfiles] = useState(loadLocalProfiles)
+  const [matches, setMatches] = useState(loadLocalMatches)
+  const [syncStatus, setSyncStatus] = useState('loading')
 
-  function saveSessions(s) {
+  // ── Sync from Supabase on mount ──────────────────────────────────────────────
+  useEffect(() => {
+    async function loadAll() {
+      setSyncStatus('loading')
+      try {
+        const [remoteSessions, remoteProfiles, remoteMatches] = await Promise.all([
+          fetchSessions(),
+          fetchProfiles(),
+          fetchMatches(),
+        ])
+
+        // Merge sessions: remote wins over local for same fecha; seed fills gaps
+        const merged = Object.values(
+          [...SEED_SESSIONS, ...loadLocalSessions(), ...remoteSessions]
+            .map(normalizeSession).filter(Boolean)
+            .reduce((acc, s) => { acc[s.fecha] = s; return acc }, {})
+        ).sort((a, b) => a.fecha < b.fecha ? 1 : -1)
+
+        setSessions(merged)
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(merged))
+
+        // Profiles: merge local + remote (remote wins)
+        const mergedProfiles = { ...loadLocalProfiles(), ...remoteProfiles }
+        setProfiles(mergedProfiles)
+        localStorage.setItem(PROFILES_KEY, JSON.stringify(mergedProfiles))
+
+        // Matches: remote is source of truth
+        if (remoteMatches.length > 0) {
+          setMatches(remoteMatches)
+          localStorage.setItem(MATCHES_KEY, JSON.stringify(remoteMatches))
+        }
+
+        setSyncStatus('on')
+      } catch {
+        setSyncStatus('off')
+      }
+    }
+    loadAll()
+  }, [])
+
+  // ── Save helpers ─────────────────────────────────────────────────────────────
+
+  async function saveSessions(s) {
     setSessions(s)
     localStorage.setItem(LOCAL_KEY, JSON.stringify(s))
+    try { await upsertSessions(s) } catch {}
   }
 
-  function saveProfiles(p) {
+  async function saveProfiles(p) {
     setProfiles(p)
     localStorage.setItem(PROFILES_KEY, JSON.stringify(p))
+    try { await upsertProfiles(p) } catch {}
   }
 
-  function saveMatches(m) {
+  // matches: Partidos calls onSave(updatedArray) and also handles individual ops
+  // We expose a full-array save AND individual upsert/delete for Partidos
+  async function saveMatches(m) {
     setMatches(m)
     localStorage.setItem(MATCHES_KEY, JSON.stringify(m))
-  }
-
-  async function sincronizar() {
-    setSyncStatus('loading')
+    // upsert all (Supabase upsert is idempotent)
     try {
-      const data = await apiCall({ action: 'getSessions' })
-      if (data?.sessions?.length) {
-        const merged = Object.values(
-          [...SEED_SESSIONS, ...data.sessions].reduce((acc, s) => {
-            acc[s.fecha] = s; return acc
-          }, {})
-        ).sort((a, b) => a.fecha < b.fecha ? 1 : -1)
-        saveSessions(merged)
-      }
-      setSyncStatus('on')
-    } catch {
-      setSyncStatus('off')
-    }
+      await Promise.all(m.map(match => upsertMatch(match)))
+    } catch {}
   }
 
-  useEffect(() => { sincronizar() }, [])
+  async function saveMatchesWithDelete(updatedList, deletedId) {
+    setMatches(updatedList)
+    localStorage.setItem(MATCHES_KEY, JSON.stringify(updatedList))
+    try {
+      await dbDeleteMatch(deletedId)
+    } catch {}
+  }
 
   const totalSessions = sessions.length
   const totalMatches = matches.length
@@ -121,7 +158,6 @@ export default function App() {
         </span>
       </div>
 
-      {/* Asistencia sub-tabs */}
       {tab === 'asistencia' && (
         <div className="sub-tabs">
           {ASISTENCIA_TABS.map(t => (
@@ -137,7 +173,12 @@ export default function App() {
       </div>
 
       <div className={`screen ${tab === 'partidos' ? 'active' : ''}`}>
-        <Partidos matches={matches} onSave={saveMatches} profiles={profiles} />
+        <Partidos
+          matches={matches}
+          onSave={saveMatches}
+          onDelete={saveMatchesWithDelete}
+          profiles={profiles}
+        />
       </div>
 
       <div className={`screen ${tab === 'asistencia' ? 'active' : ''}`}>
@@ -151,7 +192,7 @@ export default function App() {
         <Ajustes
           sessions={sessions} profiles={profiles} matches={matches}
           onSaveSessions={saveSessions} onSaveProfiles={saveProfiles} onSaveMatches={saveMatches}
-          syncStatus={syncStatus} onSync={sincronizar}
+          syncStatus={syncStatus}
         />
       </div>
 

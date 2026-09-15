@@ -110,7 +110,7 @@ function RugbyField({ formation }) {
   )
 }
 
-export default function Partidos({ matches, onSave, profiles = {} }) {
+export default function Partidos({ matches, onSave, onDelete, profiles = {} }) {
   // step: null=list, 'info'=step1, 'xv'=step2, 'view'=detail, 'result'=add result, 'field'=field view
   const [step, setStep] = useState(null)
   const [form, setForm] = useState(emptyMatch)
@@ -168,7 +168,8 @@ export default function Partidos({ matches, onSave, profiles = {} }) {
     if (!confirm('¿Eliminar este partido?')) return
     const updated = matches.filter(m => m.id !== id)
     localStorage.setItem(MATCHES_KEY, JSON.stringify(updated))
-    onSave(updated)
+    if (onDelete) onDelete(updated, id)
+    else onSave(updated)
     setViewMatch(null)
     setStep(null)
   }
